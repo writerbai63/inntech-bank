@@ -1,0 +1,9 @@
+﻿fastapi
+uvicorn[standard]
+cryptography
+argon2-cffi
+python-jose
+jinja2
+psycopg2-binary
+sqlalchemy
+python-multipart
