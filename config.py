@@ -5,7 +5,12 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
     # Buludda (Render): mühit dəyişənindən oxuyur, parol kodda yoxdur
-    DB_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
+       if DATABASE_URL.startswith("postgres://"):
+        DB_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif DATABASE_URL.startswith("postgresql://"):
+        DB_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
+    else:
+        DB_URL = DATABASE_URL
 else:
     # Lokalda (öz kompüterində): öz Postgres parolunla qoşulur
     DB_PASSWORD = "Huseyn78$"   # <-- oz Postgres parolun
