@@ -5,7 +5,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
     # Buludda (Render): mühit dəyişənindən oxuyur, parol kodda yoxdur
-       if DATABASE_URL.startswith("postgres://"):
+    if DATABASE_URL.startswith("postgres://"):
         DB_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
     elif DATABASE_URL.startswith("postgresql://"):
         DB_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
