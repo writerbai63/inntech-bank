@@ -67,14 +67,18 @@ Base.metadata.create_all(engine)
 def seed():
     with Session() as db:
         if not db.query(User).count():
-            for u, n, p, r in [("aysel", "Aysel Məmmədova", "Aysel123!", "customer"),
-                               ("orxan", "Orxan Əliyev", "Orxan123!", "customer"),
-                               ("isci1", "Nigar Hüseynova", "Staff123!", "staff")]:
+            for u, n, p, r in [("huseyn", "Hüseyn Qasımov", "123!", "customer"),
+                                ("zahid", "Zahid Rzayev", "123!", "customer"),
+                                ("nicat", "Nicat Abbasov", "123!", "customer"),
+                                ("adil", "Adil Məmmədov", "123!", "customer"),
+                                ("socl3", "SOC Analitiki", "1234", "staff")]:
                 db.add(User(username=u, full_name=n, password_hash=ph.hash(p), role=r))
             db.commit()
         if not db.query(Account).count():
-            for u, iban, bal in [("aysel", "AZ21INNT00000000000000000001", 125000),
-                                 ("orxan", "AZ21INNT00000000000000000002", 50000)]:
+            for u, iban, bal in [("huseyn", "AZ21INNT00000000000000000001", 125000),
+                                  ("zahid", "AZ21INNT00000000000000000002", 50000),
+                                  ("nicat", "AZ21INNT00000000000000000003", 75000),
+                                  ("adil", "AZ21INNT00000000000000000004", 90000)]:
                 uid = db.query(User).filter_by(username=u).first().id
                 db.add(Account(user_id=uid, iban_enc=crypto.encrypt(iban),
                                iban_idx=crypto.blind_index(iban), balance=bal))
@@ -280,7 +284,7 @@ def staff_panel(request: Request, user=Depends(current_user)):
                          "amount": t.amount / 100, "ts": t.ts.replace("T", " ")[:16], "sig": t.signature[:20] + "…",
                          "valid": crypto.verify(payload(f, to, t.amount, t.ts), t.signature)})
         logs = db.query(AuditLog).order_by(AuditLog.id.desc()).limit(12).all()
-        target = db.query(User).filter_by(username="orxan").first()
+        target = db.query(User).filter_by(username="zahid").first()
         ctx = {"user": user, "rows": rows, "logs": logs, "chain": chain_ok(db),
                "target_locked": bool(target.locked)}
     return templates.TemplateResponse(request, "staff_panel.html", ctx)
@@ -315,10 +319,10 @@ def unlock_demo_account(user=Depends(current_user)):
     if not staff_only(user):
         return JSONResponse({"trace": []}, status_code=401)
     with Session() as db:
-        target = db.query(User).filter_by(username="orxan").first()
+        target = db.query(User).filter_by(username="zahid").first()
         target.locked, target.failed_attempts = 0, 0
         db.commit()
-        audit(db, "ACCOUNT_UNLOCKED", f"orxan: {user.username} terefinden blokdan cixarildi")
+        audit(db, "ACCOUNT_UNLOCKED", f"zahid: {user.username} terefinden blokdan cixarildi")
     return {"trace": [{"text": "Hesab blokdan çıxarıldı, sayğac sıfırlandı, hadisə jurnala yazıldı", "cls": "good"}]}
 
 

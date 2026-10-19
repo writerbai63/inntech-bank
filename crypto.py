@@ -10,20 +10,31 @@ D = "secrets"
 os.makedirs(D, exist_ok=True)
 
 
-def _key(name, n=32):
+def _key(name, env_name, n=32):
+    # Əvvəlcə environment variable-dan yoxlayır (buludda sabit qalır)
+    env_val = os.environ.get(env_name)
+    if env_val:
+        return bytes.fromhex(env_val)
+    # Yoxdursa, yerli fayldan oxuyur/yaradır (yalnız öz kompüterin üçün)
     p = os.path.join(D, name)
     if not os.path.exists(p):
         open(p, "wb").write(os.urandom(n))
     return open(p, "rb").read()
 
 
-AES_KEY, HMAC_KEY = _key("aes.key"), _key("hmac.key")
-_pem = os.path.join(D, "sign_private.pem")
-if not os.path.exists(_pem):
-    k = ec.generate_private_key(ec.SECP256R1())
-    open(_pem, "wb").write(k.private_bytes(serialization.Encoding.PEM,
-        serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))
-PRIV = serialization.load_pem_private_key(open(_pem, "rb").read(), None)
+AES_KEY = _key("aes.key", "AES_KEY_HEX")
+HMAC_KEY = _key("hmac.key", "HMAC_KEY_HEX")
+
+_pem_env = os.environ.get("SIGN_PRIVATE_PEM")
+if _pem_env:
+    PRIV = serialization.load_pem_private_key(_pem_env.encode(), None)
+else:
+    _pem = os.path.join(D, "sign_private.pem")
+    if not os.path.exists(_pem):
+        k = ec.generate_private_key(ec.SECP256R1())
+        open(_pem, "wb").write(k.private_bytes(serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))
+    PRIV = serialization.load_pem_private_key(open(_pem, "rb").read(), None)
 
 
 def encrypt(text: str) -> str:            # AES-256-GCM
