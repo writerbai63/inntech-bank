@@ -1,0 +1,73 @@
+<!doctype html><html lang="az"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>externalhost:~# — brute-force terminalı</title>
+<style>
+  :root{color-scheme:dark}
+  *{box-sizing:border-box}
+  body{margin:0;background:#050807;color:#5CF28C;font-family:Consolas,"Courier New",monospace;min-height:100vh;display:flex;flex-direction:column}
+  header{padding:14px 20px;border-bottom:1px solid #123;color:#9AA;font-size:.85rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  header b{color:#FF6B6B}
+  main{flex:1;max-width:860px;margin:0 auto;padding:24px 20px;width:100%}
+  .note{background:#0D1310;border:1px solid #1C3024;border-radius:8px;padding:12px 14px;color:#8FA;font-size:.82rem;line-height:1.6;margin-bottom:18px}
+  .target{margin-bottom:16px;font-size:.9rem;color:#CDE}
+  .target input{background:#0D1310;border:1px solid #1C3024;color:#5CF28C;padding:8px 10px;font-family:inherit;border-radius:6px}
+  button{background:#1A3324;color:#5CF28C;border:1px solid #2E5A3E;padding:10px 18px;font-family:inherit;font-size:.9rem;border-radius:6px;cursor:pointer}
+  button:hover{background:#214229}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  #term{margin-top:18px;background:#000;border:1px solid #123;border-radius:8px;padding:16px;min-height:280px;font-size:.85rem;line-height:1.7;white-space:pre-wrap}
+  .bad{color:#FF6B6B}.ok{color:#5CF28C}.warn{color:#F2C85C}.dim{color:#567}
+  a.back{color:#567;font-size:.8rem}
+</style></head>
+<body>
+<header>
+  <span><b>[XARİCİ MƏNBƏ]</b> bu terminal InnTech Bank-ın hissəsi deyil — tədris məqsədli hücumçu simulyasiyasıdır</span>
+  <a class="back" href="/login">← bank saytına qayıt</a>
+</header>
+<main>
+  <div class="note">Bu səhifə həqiqi <code>/api/login</code> ünvanına sorğu göndərir, yəni bank backend-i bunu əsl giriş cəhdi
+  kimi qəbul edir. Fərq: burada yalnız <b>hücumçunun görə biləcəyi</b> cavab göstərilir (generic xəta), bankın öz
+  <a href="/staff" style="color:#8FA">işçi panelində</a> isə hadisə tam təfərrüatı ilə qeydə alınır.</div>
+
+  <div class="target">hədəf: <input id="uname" value="orxan"> &nbsp; portal: customer &nbsp;
+  <button id="go">brute-force başlat</button></div>
+
+  <div id="term">root@kali:~# nc InnTech-Bank hazırlanır…
+</div>
+</main>
+<script>
+const wordlist=["123456","password","qwerty","admin123","orxan2000","iloveyou","letmein"];
+const term=document.getElementById('term'), go=document.getElementById('go');
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function line(t,cls){term.innerHTML+='\\n'+(cls?('<span class="'+cls+'">'+esc(t)+'</span>'):esc(t));term.scrollTop=term.scrollHeight}
+
+go.addEventListener('click', async ()=>{
+  go.disabled=true;
+  const user=document.getElementById('uname').value.trim();
+  term.innerHTML='root@kali:~# python3 brute_force.py --target inntech-bank --user '+esc(user)+' --wordlist rockyou_top7.txt';
+  line('[*] Hücum başladı, '+wordlist.length+' parol sınanacaq…','dim');
+  let stopped=false;
+  for(let i=0;i<wordlist.length && !stopped;i++){
+    const pw=wordlist[i];
+    const fd=new FormData(); fd.append('username',user); fd.append('password',pw); fd.append('portal','customer');
+    let d;
+    try{ const r=await fetch('/api/login',{method:'POST',body:fd}); d=await r.json(); }
+    catch(e){ line('[!] Şəbəkə xətası','bad'); break; }
+    await new Promise(ok=>setTimeout(ok,550));
+    if(d.ok){
+      line(`[${i+1}/${wordlist.length}] "${pw}"  ->  200 OK — giriş uğurlu oldu!`,'bad');
+      line('[!] PAROL TAPILDI, hücum uğurlu oldu','bad'); stopped=true; break;
+    }
+    if(/blokl/i.test(d.error||'')){
+      line(`[${i+1}/${wordlist.length}] "${pw}"  ->  403 Forbidden — "${d.error}"`,'warn');
+      line('[x] Hədəf tərəfindən əlaqə kəsildi (hesab bloklanıb). Hücum dayandırıldı.','warn');
+      stopped=true; break;
+    }
+    line(`[${i+1}/${wordlist.length}] "${pw}"  ->  401 Unauthorized — "${d.error}"`,'bad');
+  }
+  if(!stopped) line('[*] Siyahı tükəndi, hədəf sındırılmadı.','dim');
+  line('','');
+  line('root@kali:~# _','dim');
+  go.disabled=false;
+});
+</script>
+</body></html>

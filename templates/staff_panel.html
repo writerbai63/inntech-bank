@@ -1,0 +1,34 @@
+<!doctype html><html lang="az"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>InnTech Bank – İşçi paneli</title><link rel="stylesheet" href="/static/style.css"></head><body>
+<header class="top"><img src="/static/logo.svg" alt="INNT Bank"><span class="nav"><a href="/staff/panel">Əməliyyatlar</a><a href="/staff/db">Baza görünüşü</a>{{ user.full_name }} (işçi)<a href="/logout">Çıxış</a></span></header>
+<main>
+<div class="card"><h3>Müştəri əməliyyatları</h3>
+<p>Müştəri adları və IBAN-lar maskalanıb: işçinin işi üçün tam data lazım deyil.</p>
+{% if rows %}<div style="overflow-x:auto"><table><tr><th>№</th><th>Vaxt</th><th>Göndərən</th><th>Alıcı IBAN</th><th>Məbləğ</th><th>İmza</th><th>Yoxlama</th><th></th></tr>
+{% for r in rows %}<tr><td>{{ r.id }}</td><td>{{ r.ts }}</td><td>{{ r.name }}<br><span class="mono">{{ r.from }}</span></td><td class="mono">{{ r.to }}</td>
+<td>{{ '%.2f'|format(r.amount) }} AZN</td><td class="mono">{{ r.sig }}</td>
+<td>{% if r.valid %}<span class="ok">İmza düzgün</span>{% else %}<span class="no">İmza yanlış, data dəyişdirilib</span>{% endif %}</td>
+<td><form method="post" action="/staff/tamper/{{ r.id }}"><button class="btn-s" title="Demo: hücumçunun bazada məbləği dəyişməsi">Datanı dəyiş (demo)</button></form></td></tr>{% endfor %}</table></div>
+{% else %}<p>Hələ əməliyyat yoxdur. Müştəri portalından köçürmə et.</p>{% endif %}</div>
+<div class="card"><h3>SOC: təhlükəsizlik monitorinqi</h3>
+<p>Hücumu biz etmirik. Hücumçu ayrı bir terminaldan (<code>/attacker</code>) həqiqi giriş sorğuları göndərir.
+Bu panel yalnız <b>aşkarlayır və reaksiya verir</b> — SOC analitiki rolundayıq.</p>
+<p>Hazırkı hədəf hesab: <b>orxan</b> — vəziyyət:
+{% if target_locked %}<span class="no">BLOKLANIB</span>{% else %}<span class="ok">aktiv</span>{% endif %}</p>
+<form method="post" action="/api/staff/unlock" id="unlockform">
+<button type="submit" {{ 'disabled' if not target_locked else '' }}>Sysadmin: hesabı blokdan çıxar</button>
+</form>
+</div>
+<div class="card"><h3>Audit jurnalı</h3>
+<p>Hash zəncirinin vəziyyəti: {% if chain %}<span class="ok">bütöv</span>{% else %}<span class="no">pozulub</span>{% endif %}</p>
+<div style="overflow-x:auto"><table><tr><th>Vaxt</th><th>Hadisə</th><th>Təfərrüat</th><th>Hash</th></tr>
+{% for l in logs %}<tr><td>{{ l.ts.replace('T',' ')[:19] }}</td><td>{{ l.event }}</td><td>{{ l.detail }}</td><td class="mono">{{ l.hash[:14] }}…</td></tr>{% endfor %}</table></div></div>
+</main>
+<script>
+document.getElementById('unlockform').addEventListener('submit', async e=>{
+  e.preventDefault();
+  await fetch('/api/staff/unlock', {method:'POST'});
+  location.reload();
+});
+</script>
+</body></html>

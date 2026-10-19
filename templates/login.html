@@ -1,0 +1,41 @@
+<!doctype html><html lang="az"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>InnTech Bank – Giriş</title>
+<link rel="stylesheet" href="/static/style.css"></head><body>
+<div class="split">
+  <section class="brand">
+    <img src="/static/logo.svg" alt="INNT Bank" width="200">
+    <div><h1>Təhlükəsiz bankçılığın yeni nəsli</h1>
+    <p>Məlumatlarınız şifrələnir, əməliyyatlarınız imzalanır, hər giriş qeydə alınır.</p></div>
+    <small>InnTech Bank · təhsil simulyasiyası</small>
+  </section>
+  <section class="panel">
+    <nav class="tabs">
+      <a href="/login" class="{{ 'on' if portal=='customer' }}">Müştəri girişi</a>
+      <a href="/staff" class="{{ 'on' if portal=='staff' }}">İşçi girişi</a>
+    </nav>
+    <form id="f">
+      <input type="hidden" name="portal" value="{{ portal }}">
+      <label>İstifadəçi adı<input name="username" autocomplete="username" required></label>
+      <label>Parol<input name="password" type="password" autocomplete="current-password" required></label>
+      <p class="err" id="err"></p>
+      <button>Daxil ol</button>
+    </form>
+    <div class="xray" id="xray"><b>Arxa planda nə baş verir</b><br>Daxil olduqda addımlar burada görünəcək.</div>
+  </section>
+</div>
+<script>
+const f=document.getElementById('f'),xr=document.getElementById('xray'),err=document.getElementById('err');
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+f.addEventListener('submit',async e=>{
+  e.preventDefault(); err.textContent='';
+  const r=await fetch('/api/login',{method:'POST',body:new FormData(f)});
+  const d=await r.json();
+  xr.innerHTML='<b>Arxa planda nə baş verir</b>';
+  for(const t of d.trace){
+    xr.innerHTML+='<br>› <span class="'+(d.ok?'':'bad')+'">'+esc(t)+'</span>';
+    await new Promise(ok=>setTimeout(ok,450));
+  }
+  if(d.ok){setTimeout(()=>location.href=d.redirect,1200)} else {err.textContent=d.error}
+});
+</script></body></html>

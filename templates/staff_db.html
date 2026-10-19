@@ -1,0 +1,11 @@
+<!doctype html><html lang="az"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>InnTech Bank – Baza görünüşü</title><link rel="stylesheet" href="/static/style.css"></head><body>
+<header class="top"><img src="/static/logo.svg" alt="INNT Bank"><span class="nav"><a href="/staff/panel">Əməliyyatlar</a><a href="/staff/db">Baza görünüşü</a><a href="/logout">Çıxış</a></span></header>
+<main><p>Bazaya sızan hücumçu məhz bunu görərdi: parollar hash, IBAN-lar şifrəli, açar bazada yoxdur.</p>
+<div class="card"><h3>users</h3><table><tr><th>username</th><th>role</th><th>password_hash (Argon2)</th></tr>
+{% for u in users %}<tr><td>{{ u.username }}</td><td>{{ u.role }}</td><td class="mono">{{ u.password_hash }}</td></tr>{% endfor %}</table></div>
+<div class="card"><h3>accounts</h3><table><tr><th>id</th><th>iban_enc (AES-256-GCM)</th><th>iban_idx (HMAC)</th></tr>
+{% for a in accounts %}<tr><td>{{ a.id }}</td><td class="mono">{{ a.iban_enc }}</td><td class="mono">{{ a.iban_idx }}</td></tr>{% endfor %}</table></div>
+<div class="card"><h3>transfers</h3><table><tr><th>id</th><th>from_iban_enc</th><th>to_iban_enc</th><th>signature (ECDSA)</th></tr>
+{% for t in transfers %}<tr><td>{{ t.id }}</td><td class="mono">{{ t.from_iban_enc }}</td><td class="mono">{{ t.to_iban_enc }}</td><td class="mono">{{ t.signature }}</td></tr>{% endfor %}</table></div>
+</main></body></html>
