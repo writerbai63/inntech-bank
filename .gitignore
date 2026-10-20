@@ -1,4 +1,5 @@
+# Bu fayllar GitHub-a YÜKLƏNMƏMƏLİDİR, çünki parol/açar/müvəqqəti fayl daşıyır:
 venv/
 secrets/
-
+config.py
 __pycache__/

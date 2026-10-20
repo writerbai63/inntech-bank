@@ -1,41 +1,61 @@
+<!--
+  login.html — GİRİŞ SƏHİFƏSİ (həm müştəri, həm işçi üçün EYNİ FAYL)
+  =====================================================================
+  "portal" dəyişəni (server tərəfdən gəlir: "customer" və ya "staff")
+  hansı tab-ın aktiv olduğunu (yuxarıdakı "Müştəri girişi"/"İşçi girişi")
+  və formadakı gizli sahəni idarə edir. Beləcə eyni HTML faylı iki fərqli
+  giriş ekranı kimi işləyir.
+
+  "Arxa planda nə baş verir" qutusu (#xray) — bu, kriptoqrafiya mövzusunu
+  canlı göstərmək üçün ən vacib hissədir: server tərəfdən gələn addım-addım
+  izah (Argon2 yoxlaması, rol yoxlaması, JWT yaradılması və s.) buraya
+  animasiyalı şəkildə yazılır.
+-->
 <!doctype html><html lang="az"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>InnTech Bank – Giriş</title>
 <link rel="stylesheet" href="/static/style.css"></head><body>
 <div class="split">
+  <!-- Sol tərəf: brend/tanıtım hissəsi -->
   <section class="brand">
     <img src="/static/logo.svg" alt="INNT Bank" width="200">
     <div><h1>Təhlükəsiz bankçılığın yeni nəsli</h1>
     <p>Məlumatlarınız şifrələnir, əməliyyatlarınız imzalanır, hər giriş qeydə alınır.</p></div>
     <small>InnTech Bank · təhsil simulyasiyası</small>
   </section>
+  <!-- Sağ tərəf: giriş forması -->
   <section class="panel">
     <nav class="tabs">
       <a href="/login" class="{{ 'on' if portal=='customer' }}">Müştəri girişi</a>
       <a href="/staff" class="{{ 'on' if portal=='staff' }}">İşçi girişi</a>
     </nav>
     <form id="f">
+      <!-- "portal" dəyəri gizli sahə kimi formaya qoşulur, serverə göndərilir -->
       <input type="hidden" name="portal" value="{{ portal }}">
       <label>İstifadəçi adı<input name="username" autocomplete="username" required></label>
       <label>Parol<input name="password" type="password" autocomplete="current-password" required></label>
       <p class="err" id="err"></p>
       <button>Daxil ol</button>
     </form>
+    <!-- Server tərəfdən gələn kriptoqrafiya addımları buraya canlı yazılır -->
     <div class="xray" id="xray"><b>Arxa planda nə baş verir</b><br>Daxil olduqda addımlar burada görünəcək.</div>
   </section>
 </div>
 <script>
 const f=document.getElementById('f'),xr=document.getElementById('xray'),err=document.getElementById('err');
 const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+// Forma göndəriləndə səhifə yenilənmir, /api/login-ə "arxa planda" sorğu gedir
 f.addEventListener('submit',async e=>{
   e.preventDefault(); err.textContent='';
   const r=await fetch('/api/login',{method:'POST',body:new FormData(f)});
   const d=await r.json();
   xr.innerHTML='<b>Arxa planda nə baş verir</b>';
+  // Serverdən gələn "trace" (addım-addım izah) siyahısı animasiyalı göstərilir
   for(const t of d.trace){
     xr.innerHTML+='<br>› <span class="'+(d.ok?'':'bad')+'">'+esc(t)+'</span>';
     await new Promise(ok=>setTimeout(ok,450));
   }
+  // Uğurlu olarsa müvafiq panelə yönləndirir, olmazsa xəta mesajı göstərir
   if(d.ok){setTimeout(()=>location.href=d.redirect,1200)} else {err.textContent=d.error}
 });
 </script></body></html>

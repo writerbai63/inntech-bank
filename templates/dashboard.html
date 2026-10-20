@@ -1,23 +1,43 @@
+<!--
+  dashboard.html — MÜŞTƏRİNİN ÖZ HESAB SƏHİFƏSİ
+  ================================================
+  Server (main.py -> dashboard() funksiyası) bura 4 dəyər göndərir:
+    user     — giriş etmiş istifadəçi
+    iban     — deşifrə olunmuş IBAN (yalnız SAHİBİNƏ göstərilir, açıq formada)
+    balance  — balans (AZN-lə)
+    history  — son köçürmələrin siyahısı
+
+  Sağdakı "Arxa planda nə baş verir" qutusu (#xray) — köçürmə edəndə
+  serverdən gələn addım-addım izahı (trace) canlı göstərir. Bu, demoda
+  müəllimə kriptoqrafiya addımlarını göstərmək üçün ən vacib hissədir.
+-->
 <!doctype html><html lang="az"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>InnTech Bank – Hesabım</title><link rel="stylesheet" href="/static/style.css"></head><body>
 <header class="top"><img src="/static/logo.svg" alt="INNT Bank"><span>{{ user.full_name }}<a href="/logout">Çıxış</a></span></header>
 <main><div class="grid"><div>
+  <!-- Balans və IBAN kartı -->
   <div class="card"><div>Əsas hesab</div><div class="balance">{{ '%.2f'|format(balance) }} AZN</div><div class="mono">{{ iban }}</div></div>
+  <!-- Köçürmə forması: submit ediləndə JavaScript (aşağıda) /api/transfer-ə sorğu göndərir -->
   <div class="card"><h3>Köçürmə</h3>
     <form id="tf"><label>Alıcının IBAN-ı<input name="to_iban" placeholder="AZ21INNT…" required></label>
     <label>Məbləğ (AZN)<input name="amount" type="number" step="0.01" min="0.01" required></label>
     <p class="err" id="err"></p><button>Köçür</button></form></div>
+  <!-- Son köçürmələr tarixçəsi -->
   <div class="card"><h3>Son köçürmələr</h3>
     {% if history %}<table>{% for h in history %}<tr><td>{{ h.ts }}</td><td class="mono">{{ h.to }}</td><td>−{{ '%.2f'|format(h.amount) }} AZN</td></tr>{% endfor %}</table>
     {% else %}<p>Hələ köçürmə yoxdur. Yuxarıdakı formadan ilk köçürməni et.</p>{% endif %}</div>
 </div>
+<!-- "Arxa planda nə baş verir" paneli: köçürmə addımları buraya canlı yazılır -->
 <div><div class="xray" id="xray" style="min-height:260px"><b>Arxa planda nə baş verir</b><br>Köçürmə edəndə addımlar burada görünəcək.</div></div></div></main>
 <script>
 const f=document.getElementById('tf'),xr=document.getElementById('xray'),err=document.getElementById('err');
 const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+// Forma göndəriləndə səhifə yenilənmir (e.preventDefault), əvəzinə
+// /api/transfer ünvanına "arxa planda" sorğu gedir (fetch).
 f.addEventListener('submit',async e=>{
   e.preventDefault();err.textContent='';
   const r=await fetch('/api/transfer',{method:'POST',body:new FormData(f)});const d=await r.json();
+  // Serverdən gələn "trace" siyahısı bir-bir, animasiyalı şəkildə göstərilir
   xr.innerHTML='<b>Arxa planda nə baş verir</b>';
   for(const t of d.trace){xr.innerHTML+='<br>› <span>'+esc(t)+'</span>';await new Promise(ok=>setTimeout(ok,500))}
   if(d.ok){xr.innerHTML+='<br><b>Əməliyyat tamamlandı</b>';setTimeout(()=>location.reload(),2500)}else{err.textContent=d.error}

@@ -1,4 +1,6 @@
-﻿fastapi
+# Layihənin işləməsi üçün lazım olan Python paketləri.
+# Render (bulud) bu faylı oxuyub "pip install -r requirements.txt" əmri ilə qurur.
+fastapi
 uvicorn[standard]
 cryptography
 argon2-cffi
